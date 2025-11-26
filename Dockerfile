@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8 \
     LANG=C.UTF-8
 
-# --- Base packages + toolchains (your original list + QMK stuff) ---
+# --- Base packages + toolchains (your original list) ---
 RUN apt-get update && apt-get install --no-install-recommends -y \
     build-essential \
     ca-certificates \
@@ -29,20 +29,22 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     util-linux \
     wget \
     zip \
-    zstd \
-    # QMK-relevant toolchains (for ARM boards like Charybdis)
+    zstd
+
+# QMK-relevant toolchains (with C stdlib headers)
+RUN apt-get update && apt-get install -y \
     gcc-arm-none-eabi \
     binutils-arm-none-eabi \
+    libnewlib-arm-none-eabi \
  && rm -rf /var/lib/apt/lists/*
 
 # --- Pin QMK CLI to a known-good version ---
-# Pick the version that works for you and leave it there.
 ARG QMK_CLI_VERSION=1.1.8
 RUN python3 -m pip install --no-cache-dir "qmk==${QMK_CLI_VERSION}"
 
-# --- Pin the Python deps that go with that QMK version ---
+# --- Pin the Python deps that go with that QMK version (reqs in root) ---
 COPY requirements.txt /tmp/qmk_requirements.txt
 RUN python3 -m pip install --no-cache-dir -r /tmp/qmk_requirements.txt \
  && rm /tmp/qmk_requirements.txt
- 
+
 WORKDIR /workspace
